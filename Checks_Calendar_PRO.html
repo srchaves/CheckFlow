@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario de tareas</title>
+
+<style>
+/* ================= THEMES ================= */
+:root{
+  --bg:#0a0d1a;
+  --panel:#14172a;
+  --panel-2:#1b1f3b;
+  --border:#2a2f5a;
+  --primary:#6c7cff;
+  --primary-2:#4fa3ff;
+  --text:#f2f4ff;
+  --muted:#9aa0c7;
+  --input-bg:rgba(255,255,255,.08);
+  --radius:22px;
+}
+
+[data-theme="light"]{
+  --bg:#f4f6fb;
+  --panel:#ffffff;
+  --panel-2:#f6f8ff;
+  --border:#d6daf0;
+  --text:#1c1f36;
+  --muted:#5f668f;
+  --input-bg:#ffffff;
+
+  --card-shadow:
+    0 1px 2px rgba(0,0,0,.04),
+    0 8px 24px rgba(0,0,0,.06);
+
+  --card-hover:
+    0 2px 6px rgba(0,0,0,.06),
+    0 16px 32px rgba(0,0,0,.08);
+}
+
+/* ================= BASE ================= */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+header{
+  position:relative;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:26px 36px;
+}
+header h1{
+  margin:0;
+  font-size:24px;
+}
+.header-actions{
+  display:flex;
+  gap:12px;
+}
+header button{
+  background:var(--input-bg);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:999px;
+  cursor:pointer;
+}
+
+/* ================= DAILY NOTES ================= */
+#daily-notes{
+  position:absolute;
+  left:50%;
+  transform:translateX(-51%);
+  width:calc(100% - 330px - 470px - 40px);
+  height:38px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:4px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:center; /* ← AÑADIR */
+  text-align:center;      /* ← AÑADIR */
+  color:var(--text);
+  outline:none;
+  font-weight:650;   /* ← NEGRITA (500–700 recomendado) */
+  font-size:24px;    /* ← TAMAÑO (ajusta a gusto) */
+}
+
+#daily-notes:empty::before{
+  content:"Escribe aquí tu frase del día… y recuerda: SI QUIERES, PUEDES :)";
+  color:var(--muted);
+  pointer-events:none;
+}
+
+/* ================= LAYOUT ================= */
+main{
+  display:grid;
+  grid-template-columns:360px 1fr 380px;
+  gap:22px;
+  padding:22px;
+  min-height:calc(100vh - 90px);
+}
+.panel{
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ================= CALENDAR ================= */
+.calendar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+.calendar-header > div{
+  display:flex;
+  gap:8px;
+}
+.calendar-header strong{
+  text-transform:capitalize;
+}
+.calendar-header button{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+[data-theme="dark"] .calendar-header button{
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--border);
+  color:#f2f4ff;
+}
+[data-theme="dark"] .calendar-header button:hover{
+  background:rgba(255,255,255,.14);
+}
+
+[data-theme="light"] .calendar-header button{
+  background:#ffffff;
+  border:1px solid #d6daf0;
+  color:#1c1f36;
+}
+[data-theme="light"] .calendar-header button:hover{
+  background:#f2f4ff;
+}
+
+.weekdays,.days{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+}
+.weekdays div{
+  font-size:11px;
+  text-align:center;
+  color:var(--muted);
+}
+.day{
+  background:var(--input-bg);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px 0;
+  text-align:center;
+  cursor:pointer;
+}
+.day.active{
+  outline:2px solid var(--primary);
+}
+
+/* ================= TASKS ================= */
+.tasks{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.task{
+  position:relative;
+  display:flex;
+  gap:18px;
+  padding:16px 16px 16px 22px;
+  border-radius:20px;
+  cursor:grab;
+  overflow:hidden;
+}
+
+[data-theme="dark"] .task{
+  background:linear-gradient(135deg,var(--input-bg),transparent);
+  transition:transform .25s ease;
+}
+[data-theme="dark"] .task:hover{
+  transform:translateY(-1px);
+}
+
+[data-theme="light"] .task{
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.85));
+  box-shadow:var(--card-shadow);
+  transition:.25s ease;
+}
+[data-theme="light"] .task:hover{
+  transform:translateY(-1px);
+  box-shadow:var(--card-hover);
+}
+
+.task::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:8px;
+  background:var(--task-color);
+  border-radius:22px 0 0 22px;
+}
+
+.task.done{
+  opacity:.45;
+  filter:saturate(.6);
+}
+.task.done::before{
+  background:var(--border);
+}
+.task.done .title{
+  text-decoration:line-through;
+}
+
+.task-left{ padding-top:4px; }
+.task-content{ flex:1; }
+.title{ font-size:15px; }
+.meta{
+  display:flex;
+  gap:8px;
+  margin-top:6px;
+  font-size:11px;
+  color:var(--muted);
+  flex-wrap:wrap;
+}
+.badge{
+  background:var(--input-bg);
+  padding:4px 10px;
+  border-radius:999px;
+}
+.task button{
+  background:none;
+  border:none;
+  color:#ff6b6b;
+  cursor:pointer;
+}
+
+/* ================= FORM ================= */
+form{ display:grid; gap:14px; }
+label{ font-size:12px; color:var(--muted); }
+input,select{
+  width:100%;
+  background:var(--input-bg);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  color:var(--text);
+}
+
+[data-theme="dark"] select{
+  background:rgba(255,255,255,.08);
+  color:var(--text);
+  color-scheme:dark;
+}
+[data-theme="dark"] select option{
+  background:#1b1f3b;
+  color:#f2f4ff;
+}
+
+.add-btn{
+  margin-top:10px;
+  height:120px;
+  border-radius:26px;
+  border:none;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  font-size:50px;
+  color:white;
+  cursor:pointer;
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:1100px){
+  main{grid-template-columns:1fr}
+  #daily-notes{display:none}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Calendario de tareas</h1>
+
+  <div
+    id="daily-notes"
+    contenteditable="true"
+    spellcheck="true"
+    aria-label="Notas del día"
+  ></div>
+
+  <div class="header-actions">
+    <button id="todayBtn" type="button">Hoy</button>
+    <button id="themeBtn" type="button">🌙</button>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="calendar-header">
+      <strong id="monthLabel"></strong>
+      <div>
+        <button id="prev" type="button">‹</button>
+        <button id="next" type="button">›</button>
+      </div>
+    </div>
+    <div class="weekdays">
+      <div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>d</div>
+    </div>
+    <div class="days" id="days"></div>
+  </section>
+
+  <section class="panel">
+    <h3 style="margin:0 0 14px">Tareas</h3>
+    <div class="tasks" id="taskList"></div>
+  </section>
+
+  <section class="panel">
+    <h3 id="dateLabel" style="margin:0 0 14px"></h3>
+    <form id="taskForm">
+      <div>
+        <label>Tarea</label>
+        <input id="title" required>
+      </div>
+      <div>
+        <label>Hora</label>
+        <input id="time" type="time">
+      </div>
+      <div>
+        <label>Etiqueta</label>
+        <select id="tag">
+          <option>Personal</option>
+          <option>Trabajo</option>
+          <option>Estudio</option>
+          <option>Salud</option>
+          <option>Ocio</option>
+          <option>Otros</option>
+        </select>
+      </div>
+      <div>
+        <label>Prioridad</label>
+        <select id="priority">
+          <option>Alta</option>
+          <option>Media</option>
+          <option>Baja</option>
+          <option></option>
+        </select>
+      </div>
+      <div>
+        <label>Color</label>
+        <input id="color" type="color" value="#f240ec">
+      </div>
+      <button class="add-btn" type="submit">+</button>
+    </form>
+  </section>
+</main>
+
+<script>
+const root=document.documentElement;
+const themeBtn=document.getElementById('themeBtn');
+const todayBtn=document.getElementById('todayBtn');
+const daysEl=document.getElementById('days');
+const monthLabel=document.getElementById('monthLabel');
+const dateLabel=document.getElementById('dateLabel');
+const taskList=document.getElementById('taskList');
+const notesEl=document.getElementById('daily-notes');
+
+let current=new Date();
+let selected=new Date();
+
+const STORAGE_KEY='calendar_tasks_v1';
+const NOTES_KEY='calendar_notes_v1';
+
+const tasks=JSON.parse(localStorage.getItem(STORAGE_KEY))||{};
+
+function saveTasks(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(tasks));
+}
+
+function getLocalDateKey(date){
+  const y=date.getFullYear();
+  const m=String(date.getMonth()+1).padStart(2,'0');
+  const d=String(date.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
+function loadNotes(){
+  const key=getLocalDateKey(selected);
+  const data=JSON.parse(localStorage.getItem(NOTES_KEY))||{};
+  notesEl.textContent=data[key]||'';
+}
+
+notesEl.oninput=()=>{
+  const key=getLocalDateKey(selected);
+  const data=JSON.parse(localStorage.getItem(NOTES_KEY))||{};
+  data[key]=notesEl.textContent;
+  localStorage.setItem(NOTES_KEY,JSON.stringify(data));
+};
+
+themeBtn.onclick=()=>{
+  const dark=root.getAttribute('data-theme')==='dark';
+  root.setAttribute('data-theme',dark?'light':'dark');
+  themeBtn.textContent=dark?'🌞':'🌙';
+};
+
+function renderCalendar(){
+  daysEl.innerHTML='';
+  monthLabel.textContent=current.toLocaleDateString('es',{month:'long',year:'numeric'});
+  const y=current.getFullYear(),m=current.getMonth();
+  const first=new Date(y,m,1);
+  const start=(first.getDay()+6)%7;
+  const total=new Date(y,m+1,0).getDate();
+
+  for(let i=0;i<start;i++)daysEl.appendChild(document.createElement('div'));
+
+  for(let d=1;d<=total;d++){
+    const el=document.createElement('div');
+    el.className='day';
+    el.textContent=d;
+    if(d===selected.getDate()&&m===selected.getMonth()&&y===selected.getFullYear()){
+      el.classList.add('active');
+    }
+    el.onclick=()=>{
+      selected=new Date(y,m,d);
+      renderCalendar();
+      renderTasks();
+      loadNotes();
+    };
+    daysEl.appendChild(el);
+  }
+}
+
+function sortTasks(list){
+  return list.sort((a,b)=>{
+    if(!a.time&&!b.time) return 0;
+    if(!a.time) return 1;
+    if(!b.time) return -1;
+    return a.time.localeCompare(b.time);
+  });
+}
+
+let dragFromIndex=null;
+
+function renderTasks(){
+  const key=getLocalDateKey(selected);
+  dateLabel.textContent=selected.toLocaleDateString('es',{day:'numeric',month:'long',year:'numeric'});
+  taskList.innerHTML='';
+  const list=tasks[key]||[];
+
+  list.forEach((t,i)=>{
+    const div=document.createElement('div');
+    div.className='task'+(t.done?' done':'');
+    div.draggable=true;
+    div.style.setProperty('--task-color',t.color);
+
+    div.innerHTML=`
+      <div class="task-left">
+        <input type="checkbox" ${t.done?'checked':''}>
+      </div>
+      <div class="task-content">
+        <div class="title">${t.title}</div>
+        <div class="meta">
+          ${t.time?`<span class="badge">${t.time}</span>`:''}
+          <span class="badge">${t.tag}</span>
+          <span class="badge">${t.priority}</span>
+        </div>
+      </div>
+      <button type="button">🗑</button>
+    `;
+
+    div.querySelector('input').onchange=e=>{
+      t.done=e.target.checked;
+      saveTasks();
+      renderTasks();
+    };
+    div.querySelector('button').onclick=()=>{
+      list.splice(i,1);
+      saveTasks();
+      renderTasks();
+    };
+
+    div.ondragstart=()=>{dragFromIndex=i};
+    div.ondragover=e=>e.preventDefault();
+    div.ondrop=e=>{
+      e.preventDefault();
+      if(dragFromIndex===null||dragFromIndex===i) return;
+      const moved=list.splice(dragFromIndex,1)[0];
+      list.splice(i,0,moved);
+      dragFromIndex=null;
+      saveTasks();
+      renderTasks();
+    };
+
+    taskList.appendChild(div);
+  });
+}
+
+taskForm.onsubmit=e=>{
+  e.preventDefault();
+  const key=getLocalDateKey(selected);
+  tasks[key]=tasks[key]||[];
+  tasks[key].push({
+    title:title.value,
+    time:time.value,
+    tag:tag.value,
+    priority:priority.value,
+    color:color.value,
+    done:false
+  });
+  tasks[key]=sortTasks(tasks[key]);
+  saveTasks();
+  e.target.reset();
+  renderTasks();
+};
+
+document.getElementById('prev').onclick=()=>{current.setMonth(current.getMonth()-1);renderCalendar()};
+document.getElementById('next').onclick=()=>{current.setMonth(current.getMonth()+1);renderCalendar()};
+todayBtn.onclick=()=>{
+  const today=new Date();
+  current=new Date(today);
+  selected=new Date(today);
+  renderCalendar();
+  renderTasks();
+  loadNotes();
+};
+
+renderCalendar();
+renderTasks();
+loadNotes();
+</script>
+</body>
+</html>
